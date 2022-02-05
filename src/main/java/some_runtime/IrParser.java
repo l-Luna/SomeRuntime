@@ -6,11 +6,19 @@ import some_runtime.model.Opcode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class IrParser{
 	
 	private static int linePointer = 0;
 	private static List<String> lines;
+	
+	public static RuntimeContext parse(String ir){
+		var context = new RuntimeContext();
+		var fns = parseIr(ir);
+		context.functions = fns.stream().collect(Collectors.toMap(x -> x.desc().name(), x -> x));
+		return context;
+	}
 	
 	public static List<Function> parseIr(String ir){
 		List<Function> ret = new ArrayList<>();
