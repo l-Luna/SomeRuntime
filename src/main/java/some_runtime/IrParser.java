@@ -2,13 +2,14 @@ package some_runtime;
 
 import some_runtime.model.Function;
 import some_runtime.model.Instruction;
+import some_runtime.model.NameAndType;
 import some_runtime.model.Opcode;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class IrParser{
+public final class IrParser{
 	
 	private static int linePointer = 0;
 	private static List<String> lines;
@@ -42,7 +43,7 @@ public class IrParser{
 	private static Function parseFunc(){
 		// type[str] name[str] '(' (type[str] name[str])* ')' '{'
 		StringBuilder type = new StringBuilder(), name = new StringBuilder();
-		List<Function.NameAndType> params = new ArrayList<>();
+		List<NameAndType> params = new ArrayList<>();
 		List<Instruction> instrs = new ArrayList<>();
 		var chars = cur().toCharArray();
 		
@@ -70,7 +71,7 @@ public class IrParser{
 			if(c == ',' || c == ')'){
 				if(c == ',')
 					c = chars[++i];
-				params.add(new Function.NameAndType(pName.toString(), pType.toString()));
+				params.add(new NameAndType(pName.toString(), pType.toString()));
 				typing = true;
 			}
 		}
@@ -97,8 +98,9 @@ public class IrParser{
 			for(String operand : opcode.operands()){
 				c = chars[++i];
 				StringBuilder arg = new StringBuilder();
-				while(i < chars.length && !Character.isWhitespace(c)){
-					arg.append(c);
+				while(i < chars.length && (!Character.isWhitespace(c) || chars[i - 1] == '\\')){
+					if(c != '\\')
+						arg.append(c);
 					i++;
 					if(i < chars.length)
 						c = chars[i];
@@ -114,7 +116,7 @@ public class IrParser{
 			linePointer++;
 		}
 		
-		return new Function(new Function.NameAndType(name.toString(), type.toString()), params, instrs);
+		return new Function(new NameAndType(name.toString(), type.toString()), params, instrs);
 	}
 	
 	private static String cur(){

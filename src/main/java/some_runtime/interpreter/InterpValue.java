@@ -1,6 +1,9 @@
 package some_runtime.interpreter;
 
-public sealed interface InterpValue{
+import static some_runtime.interpreter.InterpObjects.*;
+import static some_runtime.interpreter.InterpValue.*;
+
+public sealed interface InterpValue permits ObjectRefValue, ArrayValue, DecimalValue, IntValue{
 	
 	InterpValue copy();
 	int intValue();
@@ -25,14 +28,13 @@ public sealed interface InterpValue{
 		}
 	}
 	
-	// TODO: objects
-	record ObjectValue(/* type, fields, identity? */) implements InterpValue{
+	record ArrayValue(InterpValue... elements) implements InterpValue{
 		public InterpValue copy(){
-			return new ObjectValue();
+			return new ArrayValue(elements);
 		}
 		
 		public int intValue(){
-			return 0;
+			throw new IllegalStateException("Tried to perform a comparison on an array!");
 		}
 	}
 }

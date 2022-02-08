@@ -5,7 +5,7 @@ import some_runtime.model.Function;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RuntimeContext{
+public final class RuntimeContext{
 	
 	public Map<String, Function> functions = new HashMap<>();
 }

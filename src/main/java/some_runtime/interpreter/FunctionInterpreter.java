@@ -4,14 +4,16 @@ import some_runtime.RuntimeContext;
 import some_runtime.model.Function;
 import some_runtime.model.Instruction;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.DoubleSupplier;
 import java.util.function.LongSupplier;
 
+import static some_runtime.interpreter.InterpObjects.*;
 import static some_runtime.interpreter.InterpValue.DecimalValue;
 import static some_runtime.interpreter.InterpValue.IntValue;
 
-public class FunctionInterpreter{
+public final class FunctionInterpreter{
 	
 	public static Optional<InterpValue> execute(Function fn, List<InterpValue> params, RuntimeContext ctx){
 		List<InterpValue> locals = new ArrayList<>(params);
@@ -42,7 +44,7 @@ public class FunctionInterpreter{
 				
 				case "I_CONST" -> stack.push(new IntValue((long)instr.arguments().get(0)));
 				case "D_CONST" -> stack.push(new DecimalValue((double)instr.arguments().get(0)));
-				// TODO: S_CONST
+				case "S_CONST" -> stack.push(StdTypes.string((String)instr.arguments().get(0)));
 				
 				case "I_ADD" -> stack.push(new IntValue(lTop.getAsLong() + lTop.getAsLong()));
 				case "I_SUB" -> stack.push(new IntValue(lTop.getAsLong() - lTop.getAsLong()));
@@ -93,9 +95,21 @@ public class FunctionInterpreter{
 					List<InterpValue> tParams = new ArrayList<>(amnt);
 					for(int j = 0; j < amnt; j++)
 						tParams.add(stack.pop());
-					execute(targetFn, tParams, ctx).ifPresent(stack::push);
+					targetFn.execute(tParams, ctx).ifPresent(stack::push);
 				}
-				// TODO: CALL_VIRT
+				case "CALL_VIRT" -> {
+					var targetName = (String)instr.arguments().get(0);
+					var receiver = stack.pop();
+					if(!(receiver instanceof ObjectRefValue obj))
+						throw new IllegalStateException();
+					var targetFn = InterpObjects.dereference(obj).type().resolve(targetName);
+					var amnt = targetFn.parameters().size();
+					List<InterpValue> tParams = new ArrayList<>(amnt + 1);
+					tParams.add(receiver);
+					for(int j = 0; j < amnt; j++)
+						tParams.add(stack.pop());
+					targetFn.execute(tParams, ctx).ifPresent(stack::push);
+				}
 				case "CALL_SYS" -> { // TODO: replace with lib/""native"" functions
 					var target = (String)instr.arguments().get(0);
 					if(target.equals("print")){

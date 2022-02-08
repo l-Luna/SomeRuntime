@@ -1,8 +1,15 @@
 package some_runtime.model;
 
-import java.util.List;
+import some_runtime.RuntimeContext;
+import some_runtime.interpreter.FunctionInterpreter;
+import some_runtime.interpreter.InterpValue;
 
-public record Function(NameAndType desc, List<NameAndType> parameters, List<Instruction> body){
+import java.util.List;
+import java.util.Optional;
+
+public record Function(NameAndType desc, List<NameAndType> parameters, List<Instruction> body) implements Executable{
 	
-	public record NameAndType(String name, String type){}
+	public Optional<InterpValue> execute(List<InterpValue> arguments, RuntimeContext ctx){
+		return FunctionInterpreter.execute(this, arguments, ctx);
+	}
 }

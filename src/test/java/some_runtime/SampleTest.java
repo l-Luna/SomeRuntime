@@ -120,5 +120,22 @@ public class SampleTest{
 				""");
 		for(int i = 1; i < 11; i++)
 			FunctionInterpreter.execute(fib.functions.get("main"), List.of(new InterpValue.IntValue(i)), fib);
+		
+		var print = IrParser.parse("""
+				void print(){
+					s_const hi\\ lol
+					call_virt print
+					return
+				}
+				void print_multi(){
+					s_const b
+					s_const a
+					call_virt concat
+					call_virt print
+					return
+				}
+				""");
+		print.functions.get("print").execute(List.of(), print);
+		print.functions.get("print_multi").execute(List.of(), print);
 	}
 }
