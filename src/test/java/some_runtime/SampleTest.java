@@ -2,6 +2,7 @@ package some_runtime;
 
 import org.junit.jupiter.api.Test;
 import some_runtime.interpreter.FunctionInterpreter;
+import some_runtime.interpreter.InterpValue;
 
 import java.util.List;
 
@@ -78,5 +79,46 @@ public class SampleTest{
 		FunctionInterpreter.execute(fns.functions.get("main"), List.of(), fns);
 		FunctionInterpreter.execute(fns.functions.get("main2"), List.of(), fns);
 		FunctionInterpreter.execute(fns.functions.get("main3"), List.of(), fns);
+		
+		System.out.println("fibonacci seq:");
+		
+		var fib = IrParser.parse("""
+				void main(int i){
+					i_load 0
+					call_static fib
+					call_sys print
+				}
+				
+				int fib(int i){
+					i_const 1
+					i_load 0
+					i_sub
+					jump_if_gtz 6   # i - 1 > 0?  (i >= 2?)  skip
+					i_const 0
+					return_val      # return 0
+					
+					i_const 2
+					i_load 0
+					i_sub
+					jump_if_neqz 12 # i - 2 != 0?  (i != 2?)  skip
+					i_const 1
+					return_val      # return 1
+					
+					i_const 1
+					i_load 0
+					i_sub
+					call_static fib     # fib(i - 1)
+					
+					i_const 2
+					i_load 0
+					i_sub
+					call_static fib     # fib(i - 2)
+					
+					i_add
+					return_val
+				}
+				""");
+		for(int i = 1; i < 11; i++)
+			FunctionInterpreter.execute(fib.functions.get("main"), List.of(new InterpValue.IntValue(i)), fib);
 	}
 }

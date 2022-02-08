@@ -66,22 +66,22 @@ public class FunctionInterpreter{
 				case "D2I" -> stack.push(new IntValue((long)dTop.getAsDouble()));
 				case "I2D" -> stack.push(new DecimalValue(lTop.getAsLong()));
 				
-				case "JUMP" -> i = (int)instr.arguments().get(0);
+				case "JUMP" -> i = (int)instr.arguments().get(0) - 1;
 				case "JUMP_IF_EQZ" -> {
 					if(stack.pop().intValue() == 0)
-						i = (int)instr.arguments().get(0);
+						i = (int)(long)instr.arguments().get(0) - 1;
 				}
 				case "JUMP_IF_NEQZ" -> {
 					if(stack.pop().intValue() != 0)
-						i = (int)instr.arguments().get(0);
+						i = (int)(long)instr.arguments().get(0) - 1;
 				}
 				case "JUMP_IF_GTZ" -> {
 					if(stack.pop().intValue() > 0)
-						i = (int)instr.arguments().get(0);
+						i = (int)(long)instr.arguments().get(0) - 1;
 				}
 				case "JUMP_IF_LTZ" -> {
 					if(stack.pop().intValue() < 0)
-						i = (int)instr.arguments().get(0);
+						i = (int)(long)instr.arguments().get(0) - 1;
 				}
 				
 				case "CALL_STATIC" -> {
@@ -89,8 +89,11 @@ public class FunctionInterpreter{
 					if(!ctx.functions.containsKey(target))
 						throw new IllegalStateException("no function: " + target);
 					var targetFn = ctx.functions.get(target);
-					execute(targetFn, List.of(), ctx)
-							.ifPresent(stack::push);
+					var amnt = targetFn.parameters().size();
+					List<InterpValue> tParams = new ArrayList<>(amnt);
+					for(int j = 0; j < amnt; j++)
+						tParams.add(stack.pop());
+					execute(targetFn, tParams, ctx).ifPresent(stack::push);
 				}
 				// TODO: CALL_VIRT
 				case "CALL_SYS" -> { // TODO: replace with lib/""native"" functions
@@ -104,6 +107,8 @@ public class FunctionInterpreter{
 						else
 							System.out.println(top);
 					}
+					if(target.equals("stack"))
+						System.out.println(stack);
 				}
 				
 				case "RETURN" -> {

@@ -22,7 +22,12 @@ public class IrParser{
 	
 	public static List<Function> parseIr(String ir){
 		List<Function> ret = new ArrayList<>();
-		lines = ir.lines().map(String::strip).toList();
+		lines = ir.lines()
+				.map(String::strip)
+				.map(x -> x.split("#"))
+				.map(x -> x[0])
+				.filter(x -> !x.isEmpty())
+				.toList();
 		
 		for(linePointer = 0; linePointer < lines.size(); linePointer++){
 			String line = lines.get(linePointer);
@@ -45,24 +50,34 @@ public class IrParser{
 		char c = chars[i];
 		while(!Character.isWhitespace(c)){
 			type.append(c);
-			i++;
-			c = chars[i];
+			c = chars[++i];
 		}
 		while(c != '('){
 			if(!Character.isWhitespace(c))
 				name.append(c);
-			i++;
-			c = chars[i];
+			c = chars[++i];
 		}
-		while(c != ')'){
-			// TODO: params
-			i++;
-			c = chars[i];
+		c = chars[++i];
+		StringBuilder pType = new StringBuilder(), pName = new StringBuilder();
+		boolean typing = true;
+		while(c != ')' && c != ','){
+			if(Character.isWhitespace(c)){
+				if(!pType.toString().isBlank())
+					typing = false;
+			}else
+				(typing ? pType : pName).append(c);
+			c = chars[++i];
+			if(c == ',' || c == ')'){
+				if(c == ',')
+					c = chars[++i];
+				params.add(new Function.NameAndType(pName.toString(), pType.toString()));
+				typing = true;
+			}
 		}
-		while(c != '{'){
-			i++;
-			c = chars[i];
-		}
+		while(c != ')')
+			c = chars[++i];
+		while(c != '{')
+			c = chars[++i];
 		
 		linePointer++;
 		
@@ -80,8 +95,7 @@ public class IrParser{
 			Opcode opcode = Opcode.OPCODES.stream().filter(x -> x.name().equalsIgnoreCase(word.toString())).findFirst().orElseThrow();
 			List<Object> args = new ArrayList<>(opcode.operands().length);
 			for(String operand : opcode.operands()){
-				i++;
-				c = chars[i];
+				c = chars[++i];
 				StringBuilder arg = new StringBuilder();
 				while(i < chars.length && !Character.isWhitespace(c)){
 					arg.append(c);
